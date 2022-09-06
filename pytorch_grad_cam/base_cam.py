@@ -52,7 +52,15 @@ class BaseCAM:
                                        targets,
                                        activations,
                                        grads)
+        print(f"{type(weights)=}")
+        print(f"{np.min(weights)=}")
+        print(f"{np.max(weights)=}")
+        
         weighted_activations = weights[:, :, None, None] * activations
+        print(f"{type(weighted_activations)=}")
+        print(f"{np.min(weighted_activations)=}")
+        print(f"{np.max(weighted_activations)=}")
+        print(f"{eigen_smooth=}")
         if eigen_smooth:
             cam = get_2d_projection(weighted_activations)
         else:
@@ -70,17 +78,20 @@ class BaseCAM:
         if self.compute_input_gradient:
             input_tensor = torch.autograd.Variable(input_tensor,
                                                    requires_grad=True)
-
+            print(f"{input_tensor=}")
         outputs = self.activations_and_grads(input_tensor)
+        # print(f"{outputs.cpu().data.numpy().shape=}")
         if targets is None:
             target_categories = np.argmax(outputs.cpu().data.numpy(), axis=-1)
+            print(f"{target_categories=}")
             targets = [ClassifierOutputTarget(
                 category) for category in target_categories]
-
+            print(f"{targets=}")
         if self.uses_gradients:
             self.model.zero_grad()
             loss = sum([target(output)
                        for target, output in zip(targets, outputs)])
+            print(f'{loss=}')
             loss.backward(retain_graph=True)
 
         # In most of the saliency attribution papers, the saliency is
@@ -92,9 +103,14 @@ class BaseCAM:
         # This gives you more flexibility in case you just want to
         # use all conv layers for example, all Batchnorm layers,
         # or something else.
+        print(f'computing cam per layer...')
         cam_per_layer = self.compute_cam_per_layer(input_tensor,
                                                    targets,
                                                    eigen_smooth)
+        print(f"{type(cam_per_layer)=}")
+        for c in cam_per_layer:
+            print(f"\t{type(c)} {c.shape=}")
+        # Aggregate cams for all target layers
         return self.aggregate_multi_layers(cam_per_layer)
 
     def get_target_width_height(self,
@@ -121,8 +137,14 @@ class BaseCAM:
             layer_grads = None
             if i < len(activations_list):
                 layer_activations = activations_list[i]
+                print(f"{type(layer_activations)=}")
+                print(f"{np.min(layer_activations)=}")
+                print(f"{np.max(layer_activations)=}")
             if i < len(grads_list):
                 layer_grads = grads_list[i]
+                print(f"{type(layer_grads)=}")
+                print(f"{np.min(layer_grads)=}")
+                print(f"{np.max(layer_grads)=}")
 
             cam = self.get_cam_image(input_tensor,
                                      target_layer,
@@ -130,7 +152,12 @@ class BaseCAM:
                                      layer_activations,
                                      layer_grads,
                                      eigen_smooth)
-            cam = np.maximum(cam, 0)
+            print(f"{type(cam)=}")
+            print(f"{np.min(cam)=}")
+            print(f"{np.max(cam)=}")
+            # get element-wise maximum of e or 0
+            # cam = np.maximum(cam, 0)
+            # from pytorch_grad_cam/utils/image.py
             scaled = scale_cam_image(cam, target_size)
             cam_per_target_layer.append(scaled[:, None, :])
 
@@ -182,9 +209,10 @@ class BaseCAM:
 
         # Smooth the CAM result with test time augmentation
         if aug_smooth is True:
+            print(f"{aug_smooth=}")
             return self.forward_augmentation_smoothing(
                 input_tensor, targets, eigen_smooth)
-
+        print(f"calling forward...")
         return self.forward(input_tensor,
                             targets, eigen_smooth)
 
