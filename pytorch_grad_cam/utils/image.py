@@ -140,7 +140,7 @@ def show_factorization_on_image(img: np.ndarray,
 
 
 def scale_cam_image(cam, target_size=None):
-    print("\nscale_cam_image()")
+    print("\nutils/image.py scale_cam_image()")
     result = []
     for img in cam:
         print(f"{np.min(img)=}")

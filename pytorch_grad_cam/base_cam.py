@@ -46,21 +46,18 @@ class BaseCAM:
                       activations: torch.Tensor,
                       grads: torch.Tensor,
                       eigen_smooth: bool = False) -> np.ndarray:
-
+        print("\nget_cam_image()")
         weights = self.get_cam_weights(input_tensor,
                                        target_layer,
                                        targets,
                                        activations,
                                        grads)
-        print(f"{type(weights)=}")
         print(f"{np.min(weights)=}")
         print(f"{np.max(weights)=}")
         
         weighted_activations = weights[:, :, None, None] * activations
-        print(f"{type(weighted_activations)=}")
         print(f"{np.min(weighted_activations)=}")
         print(f"{np.max(weighted_activations)=}")
-        print(f"{eigen_smooth=}")
         if eigen_smooth:
             cam = get_2d_projection(weighted_activations)
         else:
@@ -72,6 +69,7 @@ class BaseCAM:
                 targets: List[torch.nn.Module],
                 eigen_smooth: bool = False) -> np.ndarray:
 
+        print("\nBaseCAM.forward()")
         if self.cuda:
             input_tensor = input_tensor.cuda()
 
@@ -123,6 +121,7 @@ class BaseCAM:
             input_tensor: torch.Tensor,
             targets: List[torch.nn.Module],
             eigen_smooth: bool) -> np.ndarray:
+        print("\nBaseCAM.compute_cam_per_layer()")
         activations_list = [a.cpu().data.numpy()
                             for a in self.activations_and_grads.activations]
         grads_list = [g.cpu().data.numpy()
@@ -166,6 +165,7 @@ class BaseCAM:
     def aggregate_multi_layers(
             self,
             cam_per_target_layer: np.ndarray) -> np.ndarray:
+        print("\nBaseCAM.aggregate_multi_layers()")
         cam_per_target_layer = np.concatenate(cam_per_target_layer, axis=1)
         cam_per_target_layer = np.maximum(cam_per_target_layer, 0)
         result = np.mean(cam_per_target_layer, axis=1)

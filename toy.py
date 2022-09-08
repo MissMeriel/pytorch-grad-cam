@@ -119,7 +119,6 @@ if __name__ == '__main__':
     # Using the with statement ensures the context is freed, and you can
     # recreate different CAM objects in a loop.
     cam_algorithm = methods[args.method]
-    print(f'{cam_algorithm=}')
     with cam_algorithm(model=model,
                        target_layers=target_layers,
                        use_cuda=args.use_cuda) as cam:

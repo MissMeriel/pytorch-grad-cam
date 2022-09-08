@@ -19,4 +19,7 @@ class GradCAM(BaseCAM):
                         target_category,
                         activations,
                         grads):
+        print("\nGradCAM.get_cam_weights()")
+        print(f"{grads.shape=}")
+        print(f"{np.mean(grads, axis=(2, 3)).shape=}\n")
         return np.mean(grads, axis=(2, 3))
